@@ -1,7 +1,7 @@
 import { useCrud } from "../smart-crud";
 
 export default function UserCount() {
-  const users = useCrud("users");
+  const users = useCrud("stu");
 
   return (
     <div className="text-sm text-end mr-2 my-2 text-gray-600">
