@@ -1,388 +1,430 @@
 
-# react-smart-crud   
-Smart, minimal, and developer-controlled CRUD engine for React — with **Optimistic UI**, **zero prop-drilling**, and **no state management headache**.
 
----
+# react-smart-crud 
 
-## 🔥 What is react-smart-crud?
+ 
+A **minimal, smart, optimistic CRUD helper for React**  
+No Redux. No Zustand. No boilerplate.
 
-`react-smart-crud` is a **lightweight state + CRUD utility** designed to remove the most painful parts of React CRUD development:
+**Designed for api management systems**.
 
-- ❌ No more endless `useState`
-- ❌ No more `useEffect` refetch loops
-- ❌ No prop drilling between components
-- ❌ No forced toast / UI library
-- ❌ No Redux / React Query overhead
 
-👉 You write **business logic**, not plumbing.
+## ✨ Features
 
----
-
-## 🧠 Core Idea (Very Important)
-
-> **One shared store per resource.  
-Optimistic first.  
-Server truth always wins.  
-Developer controls UI & UX.**
-
-- Data lives in a **central in-memory store**
-- Any component subscribed to that store updates automatically
-- CRUD actions update UI instantly (optimistic)
-- Server response finalizes or rolls back state
-- Errors come directly from backend
-
----
-
-## 😵 Problems This Library Solves
-
-### Before (Typical React CRUD)
-- `useState` in parent
-- `useEffect` for fetch
-- Props passed through 3–4 components
-- Re-fetch list after every mutation
-- Toast logic mixed with API logic
-- Server error message lost
-
-### After (react-smart-crud)
-- ✅ No `useState` for list data
-- ✅ No `useEffect` refetch
-- ✅ No props drilling
-- ✅ Instant UI update
-- ✅ Manual toast control
-- ✅ Real server error shown
-
----
-
-## ✨ Key Features
-
-✅ Optimistic Create / Update / Delete  
-✅ No `useState` needed for CRUD data  
-✅ No `useEffect` dependency hell  
-✅ No props drilling between components  
-✅ Works across **multiple components automatically**  
-✅ Manual toast / notification control  
-✅ Backend error message preserved  
-✅ Automatic rollback on failure  
-✅ REST API friendly  
-✅ Extremely small & fast  
-
----
-
-## 👥 Who Is This For?
-
-### Perfect for:
-- React dashboard projects
-- Admin panels
-- School / ERP / CRM systems
-- MERN stack apps
-- Freelancers & agencies
-- Developers tired of over-engineering
-
-### Not meant for:
-- Offline-first apps
-- GraphQL heavy caching
-- Real-time sync systems
-
----
-
-## 🆚 Comparison With Existing Solutions
-
-| Feature | react-smart-crud | React Query | Redux |
-|------|------------------|-------------|-------|
-| useState needed | ❌ No | ❌ No | ❌ No |
-| useEffect needed | ❌ No | ❌ No | ❌ No |
-| Prop drilling | ❌ No | ❌ No | ❌ No |
-| Optimistic UI | ✅ Simple | ⚠️ Complex | ⚠️ Manual |
-| Toast control | ✅ Full | ❌ Indirect | ❌ Indirect |
-| Boilerplate | 🔥 Very Low | Medium | High |
-| Learning curve | ⭐ Easy | ⭐⭐ Medium | ⭐⭐⭐ Hard |
+- ⚡ Optimistic UI (instant update)
+- 🧠 Global cache (shared across components)
+- ♻️ Auto re-fetch & sync
+- 🔐 Optional auth token support
+- 🔔 Optional toast / notification support
+- 🧩 Zero external state library
+- 🪶 Very small API surface
 
 ---
 
 ## 📦 Installation
 
-``` 
+```bash
+npm create vite@latest my-project
+
+cd my-project
+
 npm install react-smart-crud
-```
+````
 
+Optional dependency:
 
-Optional (for UI notifications)
-
-```
+```bash
 npm install react-hot-toast
 ```
 
-
-⚠️ **Toast library is NOT required**
-
-You can use:
-
-* Modal
-* Alert
-* Snackbar
-* Custom UI
-* Or nothing at all
-
 ---
 
-## 🗂️ Recommended Folder Structure
+## ⚙️ One-time Setup (Required)
 
-```txt
-src/
- ├─ smart-crud/
- │   ├─ config.js     # baseUrl & token config
- │   ├─ http.js       # fetch wrapper
- │   ├─ store.js      # central data store
- │   ├─ crud.js       # create / update / delete
- │   └─ index.js      # exports
-```
+Create a setup file **once** in your app.
 
----
-
-## ⚙️ Configuration
-
-### `config.js`
+### 📄 `src/smartCrudConfig.js`
 
 ```js
-export const config = {
-  baseUrl: "",
-  getToken: null,
-  notify: null // ✅ toast handler
-}
+import { setupCrud } from "react-smart-crud";
+import toast from "react-hot-toast";
 
-export function setupCrud(options = {}) {
-  config.baseUrl = options.baseUrl || ""
-  config.getToken = options.getToken || null
-  config.notify = options.notify || null
-}
-
+setupCrud({
+  baseUrl: "https://jsonplaceholder.typicode.com",
+  getToken: () => localStorage.getItem("token"),
+  notify: (type, message) => {
+    if (type === "success") toast.success(message);
+    if (type === "error") toast.error(message);
+  },
+});
 ```
 
-### Why this design?
+### 📄 `main.jsx`
 
-* `baseUrl` → auto applied everywhere
-* `getToken` → optional, dynamic
-* Works with:
+```js
+import "./smartCrudConfig";
+```
 
-  * JWT
-  * Cookie-based auth
-  * Public APIs
+⚠️ **Do this only once** in your app.
 
 ---
 
-## 🌐 HTTP Layer (Server Error Safe)
+## 🧠 useCrud Hook
 
 ```js
-import { config } from "./config";
+const { data, loading, error } = useCrud("users");
+```
 
-export async function request(url, options = {}) {
-  const headers = {
-    "Content-Type": "application/json",
-    ...(options.headers || {}),
-  };
+### Returned values
 
-  // 🔐 token optional
-  if (config.getToken) {
-    const token = config.getToken();
-    if (token) {
-      headers.Authorization = `Bearer ${token}`;
-    }
+| key     | type    | description   |
+| ------- | ------- | ------------- |
+| data    | array   | cached data   |
+| loading | boolean | request state |
+| error   | any     | error info    |
+
+---
+
+## ✍️ Create (POST)
+
+```js
+createItem("users", { name: "John" });
+```
+
+### With optimistic UI
+
+```js
+createItem(
+  "users",
+  { name: "John" },
+  {
+    optimistic: (data) => data,
+    onSuccess: () => console.log("Created"),
+    onError: (err) => console.error(err),
   }
-
-  const res = await fetch(config.baseUrl + url, {
-    ...options,
-    headers,
-  });
-
-  // 🟢 body safe parse
-  const data = await res.json().catch(() => ({}));
-
-  // 🔴 IMPORTANT FIX
-  if (!res.ok) {
-    throw {
-      status: res.status,
-      message: data.message || "Something went wrong",
-      data,
-    };
-  }
-
-  return data;
-}
-
+);
 ```
 
-### Benefits
-
-✔ Backend error message preserved
-✔ UI controls error display
-✔ No generic error forcing
-
 ---
 
-## 🧠 Store Concept (No useState, No Props)
-
-* One store per resource
-* Shared across all components
-* Subscribers auto re-render
-
-### What you DON’T do anymore
-
-* ❌ No `useState` for lists
-* ❌ No `useEffect` for fetching
-* ❌ No prop drilling
-* ❌ No manual syncing
-
----
-
-## ✍️ Usage Examples
-
-### CREATE (Optimistic + Toast)
+## 🔄 Update (PUT)
 
 ```js
- createItem(
-        "users",
-        {
-          email: form.email,
-          password: form.password,
-        },
-        {
-          optimistic: (data) => ({
-            email: data.email,
-            role: "user",
-          }),
+updateItem("users", 1, { name: "Updated" });
+```
 
-          onSuccess: () => toast.success("User created"),
-          onError: () => toast.error("Failed to create"),
+---
+
+## ❌ Delete (DELETE)
+
+```js
+deleteItem("users", 1);
+```
+
+---
+
+## 📂 Example Endpoints
+
+| Action | Endpoint          |
+| ------ | ----------------- |
+| Fetch  | GET /users        |
+| Create | POST /users       |
+| Update | PUT /users/:id    |
+| Delete | DELETE /users/:id |
+
+---
+
+## 🧪 Works With
+
+* REST APIs
+* Laravel / Express / Django
+* Admin dashboards
+* School / Business management systems
+* Small to mid projects
+
+---
+
+## 🧩 Philosophy
+
+> Simple cache + smart subscribers
+> No unnecessary abstraction
+> Let React re-render naturally
+
+---
+
+## 📄 License
+
+MIT © Tarequl Islam
+
+
+
+
+
+## ✅  REAL-WORLD EXAMPLE (Vite + React)
+
+### 📄 `UserPage.jsx`
+
+```jsx
+import { useCrud, createItem, deleteItem } from "react-smart-crud";
+
+export default function UserPage() {
+  const { data: users, loading, error } = useCrud("users");
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Something went wrong</p>;
+
+  return (
+    <div style={{ padding: 20 }}>
+      <h2>Users</h2>
+
+      <button
+        onClick={() =>
+          createItem("users", {
+            name: "New User",
+            email: "test@mail.com",
+          })
         }
-      );
+      >
+        ➕ Add User
+      </button>
+
+      <ul>
+        {users.map((u) => (
+          <li key={u.id}>
+            {u.name}
+            <button onClick={() => deleteItem("users", u.id)}>
+              ❌
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+````
+
+ 
+---
+
+## 🔥 Optimistic UI – Full Explanation (ADD THIS)
+
+### 🎯 Why Optimistic UI?
+
+Optimistic UI means:
+
+> **Server response আসার আগেই UI update হবে**
+> Error হলে auto rollback হবে
+
+react-smart-crud এ এটা **fully optional**।
+
+---
+
+## 🧠 Optimistic Options Structure
+
+Every mutation (`createItem`, `updateItem`, `deleteItem`) supports:
+
+```ts
+{
+  optimistic?: Function
+  onSuccess?: Function
+  onError?: Function
+}
 ```
 
 ---
 
-### UPDATE (Optimistic Patch)
+## 🟢 CREATE with Optimistic UI
+
+### Example
+
+```js
+createItem(
+  "users",
+  {
+    email: form.email,
+    password: form.password,
+  },
+  {
+    // 🔮 optimistic preview data
+    optimistic: (data) => ({
+      email: data.email,
+      role: "user",
+    }),
+
+    onSuccess: () => toast.success("User created"),
+    onError: () => toast.error("Failed to create"),
+  }
+);
+```
+
+### How it works
+
+
+1. Temporary item added instantly
+2. `_temp: true` flag attached
+3. Server response merges into same item
+4. Error হলে rollback
+
+
+---
+ 
+
+## 🔄 UPDATE with Optimistic UI (Advanced)
+
+### Example
 
 ```js
 updateItem(
-        "users",
-        editingUser.id,
-        {
-          email: form.email,
-          role: form.role,
-        },
-        {
-          optimistic: (old, patch) => ({
-            ...old,
-            email: patch.email,
-            role: patch.role,
-          }),
-          onSuccess: () => {
-            toast.success("Profile updated");
-            clearEdit(); // ✅ Clear 
-          },
-          onError: (err) => toast.error(err.message),
-        }
-      );
+  "users",
+  editingUser.id,
+  {
+    email: form.email,
+    role: form.role,
+  },
+  {
+    optimistic: (old, patch) => ({
+      ...old,
+      email: patch.email,
+      role: patch.role,
+    }),
+
+    onSuccess: () => {
+      toast.success("Profile updated");
+      clearEdit();
+    },
+
+    onError: (err) => toast.error(err.message),
+  }
+);
 ```
+
+### Optimistic function signature
+
+```ts
+optimistic: (oldItem, newData) => updatedItem
+```
+
+✔ You control exactly how UI changes
+✔ Useful for forms, partial updates, toggle switches
 
 ---
 
-### DELETE
+## ❌ DELETE with Manual Error Handling
 
 ```js
-deleteItem("users", id, {
+deleteItem("users", user.id, {
+  onSuccess: () => toast.success("Deleted"),
   onError: (err) => toast.error(err.message),
 });
 ```
 
 ---
 
-## ⚡ Optimistic UI Flow
+## 🔔 Toast / Notification Integration
 
-1. UI updates instantly
-2. API request is sent
-3. Server success → finalize data
-4. Server error → rollback
-5. Subscribers re-render automatically
+You can use:
 
-No refetch
-No flicker
-No confusion
+* react-hot-toast
 
 ---
 
-## ❗ Error Handling (Real Server Message)
+## 🔧 One-time Setup for Toast
 
-### Backend
+### `src/smartCrudConfig.js`
 
 ```js
-res.status(400).json({ message: "Invalid role" });
+import { setupCrud } from "react-smart-crud";
+import toast from "react-hot-toast";
+
+setupCrud({
+  baseUrl: "https://your-api.com",
+
+  notify: (type, message) => {
+    if (type === "success") toast.success(message);
+    if (type === "error") toast.error(message);
+  },
+});
 ```
 
-### Frontend
+---
+
+## 🧠 Manual vs Automatic Notifications
+
+### Automatic (inside library)
 
 ```js
-onError: (err) => toast.error(err.message);
+notify("success", "Deleted");
 ```
 
-✔ User sees exact server message
-✔ You control UX
+### Manual (recommended)
+
+```js
+createItem("users", data, {
+  onSuccess: () => toast.success("Created"),
+  onError: (err) => toast.error(err.message),
+});
+```
+
+✔ Full control
+✔ Better UX
+✔ No magic
 
 ---
 
-## 🧩 Why No useEffect?
+# 🧩 Summary Table (ADD THIS)
 
-* Data already exists in store
-* Subscribers handle re-render
-* No dependency array bugs
-* No infinite loops
-
----
-
-## 🧩 Why No useState?
-
-* CRUD data is shared
-* Multiple components use same data
-* Manual syncing is fragile
+| Action     | Optimistic         | Rollback | Manual Toast |
+| ---------- | ------------------ | -------- | ------------ |
+| createItem | ✅                  | ✅        | ✅            |
+| updateItem | ✅                  | ✅        | ✅            |
+| deleteItem | ❌ (instant remove) | ✅        | ✅            |
 
 ---
 
-## 🧩 Why No Prop Drilling?
+# 💡 Best Practices (Pro Tips)
 
-* Store is global per resource
-* Components subscribe directly
-* Clean and scalable
+✔ Always return **full object** from optimistic update
 
----
+✔ Keep optimistic logic **UI-only**
 
-## 🚀 Best Use Cases
+✔ Never trust optimistic data as server truth
 
-* Admin dashboards
-* Management systems
-* Internal tools
-* CRUD-heavy applications
-* Rapid MVPs
+✔ Handle toast in component, not inside library
 
 ---
 
-## ❤️ Philosophy
 
-> Simple tools scale better than complex abstractions.
 
-No magic
-No hidden behavior
-Just predictable CRUD
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ---
 
-## 📄 License
+## ✅ How it works (Mental Model)
 
-MIT — free to use, modify, and ship.
+```
+Component
+   ↓
+useCrud("users")
+   ↓
+Global store cache
+   ↓
+API request (once)
+   ↓
+All subscribers auto update
+```
+
+👉 Multiple components → **same data, no duplicate fetch**
 
 ---
-
-## 🙌 Final Note
-
-If you understand basic React,
-you already understand **react-smart-crud**.
-
-Happy coding 🚀
