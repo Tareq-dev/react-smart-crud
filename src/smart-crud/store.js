@@ -6,7 +6,7 @@ export function getEntry(key) {
       data: [],
       loading: false,
       error: null,
-      fetched: false,     // 🔑 NEW
+      fetched: false,      
       subscribers: new Set(),
     });
   }

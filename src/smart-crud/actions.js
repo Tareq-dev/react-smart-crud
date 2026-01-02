@@ -1,6 +1,5 @@
 import { getEntry } from "./store";
 import { request } from "./http";
-import { notify } from "./notify";
 
 /* ================= CREATE ================= */
 export async function createItem(url, data, options = {}) {

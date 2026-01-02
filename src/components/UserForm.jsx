@@ -84,7 +84,7 @@ export default function StudentForm({ editingStudent, clearEdit, refetch }) {
         },
         {
           onSuccess: () => {
-            toast.success("Student added ✔");
+            toast.success("Student added");
             refetch();
           },
           onError: () => toast.error("Failed to add student"),
